@@ -24,7 +24,7 @@ source "amazon-ebs" "ubuntu" {
     owners      = ["099720109477"]
   }
   ssh_username = "ubuntu"
-  ami_name     = "golden-fintech-ubuntu-${uuidv4()}"
+  ami_name     = "golden-fintech-ubuntu-v2"
 }
 
 build {
