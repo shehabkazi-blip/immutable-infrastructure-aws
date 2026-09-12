@@ -1,0 +1,39 @@
+name: Immutable Infrastructure Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          packer-version: "latest"
+
+      - name: Build Golden AMI with Packer & Ansible
+        run: |
+          cd packer
+          packer init .
+          packer build ubuntu-hardened.pkr.hcl
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Apply Infrastructure Update
+        run: |
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
