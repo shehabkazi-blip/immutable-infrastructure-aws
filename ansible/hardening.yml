@@ -1,23 +1,37 @@
-- name: Hardening Production Linux Image
+---
+- name: Harden Ubuntu Base Image
   hosts: all
   become: yes
-  tasks:
-    - name: Update all system packages
-      apt:
-        name: "*"
-        state: latest
-        update_cache: yes
+  gather_facts: yes
 
-    - name: Install mandatory security and monitoring tools
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install basic security and utility packages
       apt:
         name:
-          - fail2ban
           - ufw
-          - amazon-cloudwatch-agent
+          - fail2ban
+          - curl
+          - git
         state: present
 
-    - name: Disable SSH Password Authentication
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^#?PasswordAuthentication'
-        line: 'PasswordAuthentication no'
+    - name: Enable UFW Firewall
+      ufw:
+        state: enabled
+        policy: deny
+
+    - name: Allow SSH through UFW
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+  
+    - name: Start and enable Fail2ban
+      service:
+        name: fail2ban
+        state: started
+        enabled: yes
